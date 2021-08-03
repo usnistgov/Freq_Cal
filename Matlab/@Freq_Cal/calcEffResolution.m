@@ -1,7 +1,5 @@
 function calcEffResolution(obj,idx)
 
-    % first, instantiate a SineFit object 
-    %  Use the NIST sineFit class found on github at https://github.com/usnistgov/SineFit
     % get the ata and parameter info from the indexed files
     C = readcell(cell2mat(obj.dataFiles(idx)));
     P = readcell(cell2mat(obj.paramFiles{idx}));
@@ -20,9 +18,6 @@ function calcEffResolution(obj,idx)
     %plot(tVec,Y(:,1),tVec,Y(:,2));
     
     % initial guess of frequency from the parameter file
-    hdr = string(P(:,1));
-    row = find(hdr=='Fa');
-    f = cell2mat(P(row,2));
     w = 2*pi*f;
     
     row = find(hdr=='Ka');

@@ -9,6 +9,8 @@ classdef Freq_Cal < handle
         F0 = 50     % Nominal Frequency
         Fs = 50     % reporting rate
         
+        fig = 0;    % keep track of open figured
+        
         
     end
     
@@ -80,6 +82,7 @@ classdef Freq_Cal < handle
   methods (Access = public)
       obj = getResultsFileList(obj) % Gets the data and the parameter file list
       calcEffResolution(obj,idx)  % calculates effective resolution from the indexed data and parameter file
+      calcFreqRng(obj)  % calcuates the accuracy of frequency and ROCOF for a frequency range test
   end
 %%-------------------------------------------------------------------------
   % Private Methods called from external method files
