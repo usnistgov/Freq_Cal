@@ -83,6 +83,7 @@ classdef Freq_Cal < handle
       obj = getResultsFileList(obj) % Gets the data and the parameter file list
       calcEffResolution(obj,idx)  % calculates effective resolution from the indexed data and parameter file
       calcFreqRng(obj)  % calcuates the accuracy of frequency and ROCOF for a frequency range test
+      calcInterHarm(obj) % Calculates accuracy of Frequency and ROCOF under Interharmic tests
   end
 %%-------------------------------------------------------------------------
   % Private Methods called from external method files
