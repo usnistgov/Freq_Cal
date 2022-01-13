@@ -1,5 +1,7 @@
 function calcEffResolution(obj,idx)
 
+    obj.getResultsFileList('Choose the folder containing the Effective Resolution Test Data')
+
     % get the ata and parameter info from the indexed files
     C = readcell(cell2mat(obj.dataFiles(idx)));
     P = readcell(cell2mat(obj.paramFiles{idx}));

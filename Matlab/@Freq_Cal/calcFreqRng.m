@@ -6,7 +6,7 @@ function calcFreqRng(obj)
 % Freq, Freq_accuracy, ROCOF_accuracy
 T = table('Size',[numel(obj.dataFiles),3],...
           'VariableTypes',{'double','double','double'},...
-          'VariableNames',{'Freq','Freq_Accuracy','ROCOF_Accuracy'});
+          'VariableNames',{'Freq','Freq_AbsErr','ROCOF_AbsErr'});
 
 for i = 1:numel(obj.dataFiles)
     C = readcell(cell2mat(obj.dataFiles(i)));
@@ -23,16 +23,16 @@ for i = 1:numel(obj.dataFiles)
     inst = cell2mat(C(2:end,col));    
     col = find(hdr=='REF_FREQ');
     ref = cell2mat(C(2:end,col));
-    fAcc = calcAcc(inst,ref);
+    fAbsErr = abs(inst-ref);
     
     % Calculate the ROCOF accuracy
     col = find(hdr=='PMU_ROCOF'); 
     inst = cell2mat(C(2:end,col));    
     col = find(hdr=='REF_ROCOF'); 
     ref = cell2mat(C(2:end,col));    
-    rAcc = (1-abs(inst-ref))*100;
+    rAbsErr = abs(inst-ref);
     
-    T(i,:) = {f(1), min(fAcc),min(rAcc)};
+    T(i,:) = {f(1), max(fAbsErr),max(rAbsErr)};
     
 end
 
@@ -43,32 +43,37 @@ writetable(T,fullfile(obj.resultPath,'FreqRng_Results.csv'))
 obj.fig = obj.fig+1;
 figure(obj.fig)
 subplot(2,1,1)
-xData = T{:,'Freq'}; yData = T{:,'Freq_Accuracy'};
+xData = T{:,'Freq'}; yData = T{:,'Freq_AbsErr'};
 plot(xData,yData,'*k')
-title('Frequency Accuracy (%)')
-xlabel('Frequency (Hz)')
-ylabel('Accuracy (%)')
+title('Frequency Absolute Error (Hz)')
+xlabel('Input Frequency (Hz)')
+ylabel('Absolute Error (Hz)')
+yline(obj.MaxAbsFreqError,'--r')
 yl = ylim;
-ylim([yl(1)+0.01,yl(2)+0.01])
+ylim([-0.0005,yl(2)+0.01])
 xlim([20,80])
-%yline(99.9900,'r')
+% draw the measuring and operating ranges
+xline(obj.OpRng(1),'--r')
+xline(obj.OpRng(2),'--r')
+xline(obj.MeasRng(1),'--b')
+xline(obj.MeasRng(2),'--b')
 
+% ROCOF
 subplot(2,1,2)
-yData = T{:,'ROCOF_Accuracy'};
+yData = T{:,'ROCOF_AbsErr'};
 plot(xData,yData,'*k')
-title('ROCOF Accuracy (%)')
-xlabel('Frequency (Hz)')
-ylabel('Accuracy (%)')
+title('ROCOF Absolute Error (Hz/s)')
+xlabel('Input Frequency (Hz)')
+ylabel('Absolute Error (Hz/s)')
+yline(obj.MaxAbsRocofError,'--r')
 yl = ylim;
-ylim([yl(1)+0.01,yl(2)+0.01])
+if yl(2) < obj.MaxAbsRocofError, yl(2) = obj.MaxAbsRocofError; end
+ylim([-0.0005,yl(2)+0.01])
 xlim([20,80])
+% draw the measuring and operating ranges
+xline(obj.OpRng(1),'--r')
+xline(obj.OpRng(2),'--r')
+xline(obj.MeasRng(1),'--b')
+xline(obj.MeasRng(2),'--b')
 
-end
-
-%%-------------------------------------------------------------------------
-% local functions
-function [accuracy] = calcAcc(inst,ref)
-% calculates % accuracy given the instrument value and the reference value
-err = inst-ref;
-accuracy = ((ref-abs(err))./ref)*100;
 end

@@ -23,14 +23,14 @@ for i = 1:numel(obj.dataFiles)
     inst = cell2mat(C(2:end,col));    
     col = find(hdr=='REF_FREQ');
     ref = cell2mat(C(2:end,col));
-    fAcc = calcAcc(inst,ref);
+    fAcc = abs(inst-ref);
     
     % Calculate the ROCOF accuracy
     col = find(hdr=='PMU_ROCOF'); 
     inst = cell2mat(C(2:end,col));    
     col = find(hdr=='REF_ROCOF'); 
     ref = cell2mat(C(2:end,col));    
-    rAcc = (1-abs(inst-ref))*100;    
+    rAcc = abs(inst-ref);    
     
     T(i,:) = {f(1), min(fAcc),min(rAcc)};
     
@@ -45,10 +45,12 @@ figure(obj.fig)
 subplot(2,1,1)
 xData = T{:,'InterHarmFreq'}; yData = T{:,'Freq_Accuracy'};
 plot(xData,yData,'*k')
-title('Frequency Accuracy (%)')
+title('Frequency Absolute Error (Hz)')
 xlabel('Interfering signal frequency (Hz)')
-ylabel('Accuracy (%)')
-ylim([min(yData)-0.01,100+0.01])
+ylabel('Absolute Error (Hz)')
+yline(obj.MaxAbsFreqError,'--r')
+yl = ylim;
+ylim([-0.0005,yl(2)+0.001])
 xlim([0,110])
 xline(25,'--r')
 xline(75,'--r')
@@ -59,23 +61,17 @@ xline(55,'--b')
 subplot(2,1,2)
 yData = T{:,'ROCOF_Accuracy'};
 plot(xData,yData,'*k')
-title('ROCOF Accuracy (%)')
+title('ROCOF Absolute Error (Hz/s)')
 xlabel('Interfering signal frequency (Hz)')
-ylabel('Accuracy (%)')
-ylim([min(yData)-0.01,100+0.01])
+ylabel('Absolute Error (Hz/s)')
+yline(obj.MaxAbsRocofError,'--r')
+yl = ylim;
+if yl(2) < obj.MaxAbsRocofError, yl(2) = obj.MaxAbsRocofError; end
+ylim([-0.005,yl(2)+0.01])
 xlim([0,110])
 xline(25,'--r')
 xline(75,'--r')
 xline(45,'--b')
 xline(55,'--b')
 
-end
-
-
-%%-------------------------------------------------------------------------
-% local functions
-function [accuracy] = calcAcc(inst,ref)
-% calculates % accuracy given the instrument value and the reference value
-err = inst-ref;
-accuracy = ((ref-abs(err))./ref)*100;
 end

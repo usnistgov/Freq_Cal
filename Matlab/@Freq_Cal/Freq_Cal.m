@@ -9,7 +9,22 @@ classdef Freq_Cal < handle
         F0 = 50     % Nominal Frequency
         Fs = 50     % reporting rate
         
-        fig = 0;    % keep track of open figured
+        
+        %Delay Times will be calculated
+        FreqDelay
+        ROCOFDelay
+        
+        % OpRng and MeasRng are 2 value arrays of doubles:  [lower, upper]
+        OpRng
+        MeasRng
+        
+        MaxAbsFreqError
+        MaxAbsRocofError
+        
+        MaxAbsFreqErrorDyn
+        MaxAbsRocofErrorDyn
+       
+        fig = 1;    % keep track of open figures
         
         
     end
@@ -42,48 +57,62 @@ classdef Freq_Cal < handle
                 obj.F0 = structure.F0.F0;
                 obj.Fs = structure.Fs.Fs;
             end
-
             
-            % constructor input arguments
-            changed = false;
-            for i = 1:2:nargin
-                switch varargin{i}
-                    case 'F0'
-                        obj.F0 = varargin{i+1};
-                        changed = true;
-                    case 'Fs'
-                        obj.Fs = varargin{i+1};
-                        changed = true;
-%                     case 'Reset'    % delete the .ini file
-%                         b = varargin{i+1};
-%                         if b=="t" || b=="T"|| b=="true" || b=="True"
-%                             if exist(fullfile(appDataPath,name),'file')
-%                                 delete(fullfile(appDataPath,name))
-%                             end
-%                         end
-                    otherwise
-                        warning('Unrecognized parameter %s',varargin{i});
-                end
-            end
+            
+            % Optional input parameters
+            defaultF0 = 50;
+            defaultFs = 50;
+            defaultOpRng = [25,75];
+            defaultMeasRng = [45,55];
+            defaultMaxAbsFreqError = 0.005;
+            defaultMaxAbsRocofErr = 0.04;
+            defaultMaxAbsFreqErrorDyn = 0.35;
+            defaultMaxAbsRocofErrDyn = 14;
+            
+            p = inputParser;
+            
+             validScalarPosNum = @(x) isnumeric(x) && isscalar(x) && (x > 0);  
+             validRng = @(x) isvector(x) && length(x) == 2 && isa(x,'double');
+             
+             addParameter(p,'F0',defaultF0,validScalarPosNum)
+             addParameter(p,'Fs',defaultF0,validScalarPosNum)
+             addParameter(p,'OpRng',defaultOpRng,validRng)
+             addParameter(p,'MeasRng',defaultMeasRng,validRng)
+             addParameter(p,'MaxAbsFreqError',defaultMaxAbsFreqError,validRng)
+             addParameter(p,'MaxAbsRocofError',defaultMaxAbsRocofErr,validRng)
+             addParameter(p,'MaxAbsFreqErrorDyn',defaultMaxAbsFreqErrorDyn,validRng)
+             addParameter(p,'MaxAbsRocofErrorDyn',defaultMaxAbsRocofErrDyn,validRng)
+             
+             
+             parse(p,varargin{:})
+                          
+             obj.F0 = p.Results.F0;
+             obj.Fs = p.Results.Fs;
+             obj.OpRng = p.Results.OpRng;
+             obj.MeasRng = p.Results.MeasRng;
+             obj.MaxAbsFreqError = p.Results.MaxAbsFreqError;
+             obj.MaxAbsRocofError = p.Results.MaxAbsRocofError;           
+             obj.MaxAbsFreqErrorDyn = p.Results.MaxAbsFreqErrorDyn;
+             obj.MaxAbsRocofErrorDyn = p.Results.MaxAbsRocofErrorDyn;           
 
-            if changed
+            if (obj.F0 ~= defaultF0 && obj.Fs ~= defaultFs)
                 structure = struct('ResultsPath',struct('ResultsPath',obj.resultPath),....
                                     'F0',struct('F0',num2str(obj.F0)),...
                                     'Fs',struct('Fs',num2str(obj.Fs)));
                 obj.struct2Ini(fullfile(appDataPath,name),structure); % write the .ini file
-            end
-                                                
-                         
+            end                         
         end
     end
 
 %%-------------------------------------------------------------------------
   % Public Methods called from external method files
   methods (Access = public)
-      obj = getResultsFileList(obj) % Gets the data and the parameter file list
+      %obj = getResultsFileList(obj) % Gets the data and the parameter file list
+      obj = calcDelayTime(obj)  % calculates the delay time by cross correlation between timestamped reference and instrument readings  
       calcEffResolution(obj,idx)  % calculates effective resolution from the indexed data and parameter file
       calcFreqRng(obj)  % calcuates the accuracy of frequency and ROCOF for a frequency range test
       calcInterHarm(obj) % Calculates accuracy of Frequency and ROCOF under Interharmic tests
+      calcDynMeasRange(obj) % Calculates the accuracy during frequency modulation over the measuring range
   end
 %%-------------------------------------------------------------------------
   % Private Methods called from external method files
@@ -91,6 +120,17 @@ classdef Freq_Cal < handle
       
   end
 
+  %%  -----------------------------------------------------------------------
+    % Local public methods
+    methods (Access = public)
+        
+        function [Freqs, ROCOFs] = shiftByDelayTime(obj,Freqs,ROCOFs)  
+            % shifts series of frequency and ROCOF measurements by the estimated delay times
+            
+        end
+        
+        
+    end
   
 %%  -----------------------------------------------------------------------
     % Local Static Methods
@@ -170,6 +210,28 @@ classdef Freq_Cal < handle
             fclose(f);                        
         end
         
+        
+        function filenames = getfn(folder,pattern)
+            getfnrec(folder,pattern)
+            
+            idx = ~cellfun(@isempty, regexp(filenames,pattern));
+            filenames =filenames(idx);
+            
+            % This nested function recursively goes through all subfolders
+            % and collects all filenames within them
+            function getfnrec(path,pattern)
+                d = dir(path);
+                filenames = {d(~[d.isdir]).name};
+                filenames = strcat(path,filesep,filenames);
+                
+                dirnames = {d([d.isdir]).name};
+                dirnames = setdiff(dirnames,{'.','..'});
+                for i = 1:numel(dirnames)
+                    fulldirname = [path filesep dirnames{i}];
+                    filenames = [filenames, self.getfn(fulldirname,pattern)];
+                end
+            end
+        end
         
     end
     
