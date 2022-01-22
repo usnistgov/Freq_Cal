@@ -108,11 +108,12 @@ classdef Freq_Cal < handle
   % Public Methods called from external method files
   methods (Access = public)
       %obj = getResultsFileList(obj) % Gets the data and the parameter file list
-      obj = calcDelayTime(obj)  % calculates the delay time by cross correlation between timestamped reference and instrument readings  
+      obj = calcDelayTime(obj);  % calculates the delay time by cross correlation between timestamped reference and instrument readings  
       calcEffResolution(obj,idx)  % calculates effective resolution from the indexed data and parameter file
       calcFreqRng(obj)  % calcuates the accuracy of frequency and ROCOF for a frequency range test
       calcInterHarm(obj) % Calculates accuracy of Frequency and ROCOF under Interharmic tests
       calcDynMeasRange(obj) % Calculates the accuracy during frequency modulation over the measuring range
+      calcFreqSettlingTime(obj) % Calculate the settling time of the frequency step using equivalent time sampling
   end
 %%-------------------------------------------------------------------------
   % Private Methods called from external method files
@@ -231,6 +232,29 @@ classdef Freq_Cal < handle
                     filenames = [filenames, self.getfn(fulldirname,pattern)];
                 end
             end
+        end
+        
+        function [t, Y] = interleaveData(Data,dT,dir)
+            % Interleave 2D ETS data in a positive (first column first) or
+            % negative (last column first) direction
+            
+            % time vector
+            [nSamples,nColumns] = size(Data);
+            t_axis = (0:1:nSamples-1)*dT;
+            t_tot = zeros(nSamples,nColumns);
+            for i = 1:nColumns
+               t_tot(:,i) = t_axis' + ((i-1)*dT/nColumns); 
+            end
+            t_final = t_tot;
+            if dir == 'pos', t_final = fliplr(t_final); end
+            t_final = t_final(:);
+            [t,idx] = sort(t_final);
+            
+            % Data vector
+            Y_tot = Data;
+            %if dir == 'pos',Y_tot = fliplr(Y_tot); end
+            Y_final = Y_tot(:);
+            Y = Y_final(idx);                                    
         end
         
     end
