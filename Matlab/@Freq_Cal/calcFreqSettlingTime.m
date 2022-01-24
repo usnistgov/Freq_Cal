@@ -12,19 +12,34 @@ obj.getResultsFileList(prompt)
 C = readcell(cell2mat(obj.dataFiles(1)));
 hdr = string(C(1,:));
 col = find(hdr=='Inst. Freq');
-data = cell2mat((C(2:end,col)));
-freqs = ones(length(data),numel(obj.dataFiles));
-freqs(:,1) = freqs(:,1).*data;
+
+% read all the data into a cell array.  some data is longer than others
+data = cell(1,numel(obj.dataFiles));
+C = readcell(cell2mat(obj.dataFiles(1)));
+data{1,1} = C(2:end,col);
+nData = length(data{1,1});
+
+for i = 2:numel(obj.dataFiles)
+    C = readcell(cell2mat(obj.dataFiles(i)));
+    data{1,i} = C(2:end,col);
+    if length(data{1,i})<nData,nData = length(data{1,i});end
+end
+
+
+freqs = ones(nData,numel(obj.dataFiles));
 
 % read the instrument frequency into a 2D array
-for i = 2: numel(obj.dataFiles)
-    C = readcell(cell2mat(obj.dataFiles(i)));
-    data = cell2mat((C(2:end,col)));
-    freqs(:,i) = freqs(:,i).*data(1:length(freqs));        
+for i = 1: numel(obj.dataFiles)
+    freqs(:,i) = freqs(:,i).*cell2mat(data{1,i}(1:nData));        
+    %freqs(:,i) = freqs(:,i).*cell2mat(data{1,i}((length(data{1,i})-nData+1):end)); 
 end
 [t,Y] = obj.interleaveData(freqs,1/obj.Fs,'pos');   % interleave the ETS data
 
-% use a Histogram to find the beginning and ending data
+idxMid = find(Y>obj.F0,1,'first'); % find the index of the first high sample
+posStep = false;
+if idxMid > length(Y)/4,posStep = true;end % postive or negative Step
+
+% use a Histogram to find the 2 most common data values
 [N,edges,bin] = histcounts(Y,100);  % histogrqm
 [~,iFirst] = max(N);    % index of the highest values in the histogram
 N(iFirst) = 0;
@@ -37,14 +52,28 @@ meanFirst = mean(Y(firstLogicalIndex));
 secondLogicalIndex = Y>edges(iSecond) & Y<=edges(iSecond+1);
 meanSecond = mean(Y(secondLogicalIndex));
 
+% next find out if the most common value matches the initial state or not
+if posStep && (meanFirst < meanSecond)
+    ;
+elseif ~posStep && (meanSecond < meanFirst)
+    ;
+else  % swap the values if it does not match
+    temp = firstLogicalIndex;
+    firstLogicalIndex = secondLogicalIndex;
+    secondLogicalIndex = temp;
+    temp = meanFirst;
+    meanFirst = meanSecond;
+    meanSecond=temp;
+end
+
 stepSize = abs(meanFirst - meanSecond);
 firstHighLimit = meanFirst + .1*stepSize;
 firstLowLimit = meanFirst - .1*stepSize;
 secondHighLimit = meanSecond + .1*stepSize;
 secondLowLimit = meanSecond - .1*stepSize;
 
-% if First is high or low
-midLevel = (meanFirst+meanSecond)/2;
+midLevel = (meanFirst+meanSecond)/2; % The value at the middle of the step
+
 posStep = meanFirst < meanSecond;
 if posStep
     idxFirst = find(firstLogicalIndex,1,'last');
