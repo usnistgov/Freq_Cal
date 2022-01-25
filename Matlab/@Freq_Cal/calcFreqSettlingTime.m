@@ -74,20 +74,25 @@ secondLowLimit = meanSecond - .1*stepSize;
 
 midLevel = (meanFirst+meanSecond)/2; % The value at the middle of the step
 
-posStep = meanFirst < meanSecond;
-if posStep
+%posStep = meanFirst < meanSecond;
+%if posStep
     idxFirst = find(firstLogicalIndex,1,'last');
     idxSecond = find(secondLogicalIndex,1,'first');
     idxStart = idxFirst - (14/obj.F0 * 10 * obj.Fs);
     idxEnd = idxSecond + (14/obj.F0 * 10 * obj.Fs);
-    idxMid = find(Y>=midLevel,1,'first');
-else
-    idxFirst = find(firstLogicalIndex,1,'first');
-    idxSecond = find(secondLogicalIndex,1,'last');
-    idxStart = idxSecond - (14/obj.F0 * 10 * obj.Fs);
-    idxEnd = idxFirst + (14/obj.F0 * 10 * obj.Fs);
-    idxMid = find(Y<=midLevel,1,'last');     
-end
+    
+    if posStep    
+        idxMid = find(Y>=midLevel,1,'first');
+    else
+        idxMid = find(Y<=midLevel,1,'first');
+    end
+% else
+%     idxFirst = find(firstLogicalIndex,1,'first');
+%     idxSecond = find(secondLogicalIndex,1,'last');
+%     idxStart = idxSecond - (14/obj.F0 * 10 * obj.Fs);
+%     idxEnd = idxFirst + (14/obj.F0 * 10 * obj.Fs);
+%     idxMid = find(Y<=midLevel,1,'last');     
+%end
 
 t = t-t(idxMid);
 
@@ -99,8 +104,8 @@ if posStep
     tFirst = t(Y < firstHighLimit);
     tSecond = t(Y > secondLowLimit);
 else    
-    tFirst = t(Y < firstHighLimit);
-    tSecond = t(Y > secondLowLimit); 
+    tFirst = t(Y > firstLowLimit);
+    tSecond = t(Y < secondHighLimit); 
 end
 
 % Settling time using 90% of the step
@@ -147,6 +152,7 @@ plot(...
  xlabel('Time from step (s)');
  ylabel('Frequency (Hz)');
  title(sprintf('Settling time using 90%% of the step = %0.4f s',ST1))
+ axis padded
  xlim([t(1),t(end)])
  
  subplot(2,1,2)
