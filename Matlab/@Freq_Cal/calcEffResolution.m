@@ -1,4 +1,4 @@
-function calcEffResolution(obj,idx)
+function obj = calcEffResolution(obj,idx)
 
     obj.getResultsFileList('Choose the folder containing the Effective Resolution Test Data')
 
@@ -35,6 +35,9 @@ function calcEffResolution(obj,idx)
     
     % calculate the 4-P fit
     SF.fitter(1);
+    
+    obj.FreqEffRes = SF.rmserr(1)/max(SF.Y_est(:,1));
+    obj.RocofEffRes = SF.rmserr(2)/max(SF.Y_est(:,2));
     
     % plot the fits
     close all

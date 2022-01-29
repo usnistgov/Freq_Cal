@@ -14,15 +14,20 @@ classdef Freq_Cal < handle
         FreqDelay
         ROCOFDelay
         
+        %Effective Resolution will be calculated
+        FreqEffRes
+        RocofEffRes
+        
         % OpRng and MeasRng are 2 value arrays of doubles:  [lower, upper]
         OpRng
         MeasRng
         
         MaxAbsFreqError
-        MaxAbsRocofError
+        MaxAbsRocofError        
         
         MaxAbsFreqErrorDyn
         MaxAbsRocofErrorDyn
+        R
        
         fig = 1;    % keep track of open figures
         
@@ -68,6 +73,8 @@ classdef Freq_Cal < handle
             defaultMaxAbsRocofErr = 0.04;
             defaultMaxAbsFreqErrorDyn = 0.35;
             defaultMaxAbsRocofErrDyn = 14;
+            defaultFreqEffRes = 0.0005;
+            defaultRocofEffRes = 0.006;
             
             p = inputParser;
             
@@ -78,10 +85,12 @@ classdef Freq_Cal < handle
              addParameter(p,'Fs',defaultF0,validScalarPosNum)
              addParameter(p,'OpRng',defaultOpRng,validRng)
              addParameter(p,'MeasRng',defaultMeasRng,validRng)
-             addParameter(p,'MaxAbsFreqError',defaultMaxAbsFreqError,validRng)
-             addParameter(p,'MaxAbsRocofError',defaultMaxAbsRocofErr,validRng)
-             addParameter(p,'MaxAbsFreqErrorDyn',defaultMaxAbsFreqErrorDyn,validRng)
-             addParameter(p,'MaxAbsRocofErrorDyn',defaultMaxAbsRocofErrDyn,validRng)
+             addParameter(p,'MaxAbsFreqError',defaultMaxAbsFreqError,validScalarPosNum)
+             addParameter(p,'MaxAbsRocofError',defaultMaxAbsRocofErr,validScalarPosNum)
+             addParameter(p,'MaxAbsFreqErrorDyn',defaultMaxAbsFreqErrorDyn,validScalarPosNum)
+             addParameter(p,'MaxAbsRocofErrorDyn',defaultMaxAbsRocofErrDyn,validScalarPosNum)
+             addParameter(p,'FreqEffRes',defaultFreqEffRes,validScalarPosNum)
+             addParameter(p,'RocofEffRes',defaultRocofEffRes,validScalarPosNum)
              
              
              parse(p,varargin{:})
@@ -93,7 +102,9 @@ classdef Freq_Cal < handle
              obj.MaxAbsFreqError = p.Results.MaxAbsFreqError;
              obj.MaxAbsRocofError = p.Results.MaxAbsRocofError;           
              obj.MaxAbsFreqErrorDyn = p.Results.MaxAbsFreqErrorDyn;
-             obj.MaxAbsRocofErrorDyn = p.Results.MaxAbsRocofErrorDyn;           
+             obj.MaxAbsRocofErrorDyn = p.Results.MaxAbsRocofErrorDyn;   
+             obj.FreqEffRes = p.Results.FreqEffRes;
+             obj.RocofEffRes = p.Results.RocofEffRes;
 
             if (obj.F0 ~= defaultF0 && obj.Fs ~= defaultFs)
                 structure = struct('ResultsPath',struct('ResultsPath',obj.resultPath),....
@@ -109,11 +120,12 @@ classdef Freq_Cal < handle
   methods (Access = public)
       %obj = getResultsFileList(obj) % Gets the data and the parameter file list
       obj = calcDelayTime(obj);  % calculates the delay time by cross correlation between timestamped reference and instrument readings  
-      calcEffResolution(obj,idx)  % calculates effective resolution from the indexed data and parameter file
+      obj = calcEffResolution(obj,idx)  % calculates effective resolution from the indexed data and parameter file
       calcFreqRng(obj)  % calcuates the accuracy of frequency and ROCOF for a frequency range test
       calcInterHarm(obj) % Calculates accuracy of Frequency and ROCOF under Interharmic tests
       calcDynMeasRange(obj) % Calculates the accuracy during frequency modulation over the measuring range
       calcFreqSettlingTime(obj) % Calculate the settling time of the frequency step using equivalent time sampling
+      calcRocofSettlingTime(obj) % Calculate the settling time of the ROCOF step using equivalent time sampling
   end
 %%-------------------------------------------------------------------------
   % Private Methods called from external method files
