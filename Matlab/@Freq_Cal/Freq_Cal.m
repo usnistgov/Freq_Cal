@@ -56,6 +56,11 @@ classdef Freq_Cal < handle
             iniExists = exist(fullfile(appDataPath,name),'file');
             if ~iniExists
                 obj.resultPath = uigetdir(fullfile(getenv('USERPROFILE'),'Documents'),'Path to instrument data');
+                structure = struct('ResultsPath',struct('ResultsPath',obj.resultPath),....
+                                    'F0',struct('F0',num2str(50)),...
+                                    'Fs',struct('Fs',num2str(50)));
+                obj.struct2Ini(fullfile(appDataPath,name),structure); % write the .ini file
+                
             else
                 structure = obj.ini2struct(fullfile(appDataPath,name));
                 obj.resultPath = structure.ResultsPath.ResultsPath;
@@ -122,6 +127,7 @@ classdef Freq_Cal < handle
       obj = calcDelayTime(obj);  % calculates the delay time by cross correlation between timestamped reference and instrument readings  
       obj = calcEffResolution(obj,idx)  % calculates effective resolution from the indexed data and parameter file
       calcFreqRng(obj)  % calcuates the accuracy of frequency and ROCOF for a frequency range test
+      calcHarm(obj) % calculates the accuracy under the 13_Harmonic test conditions
       calcInterHarm(obj) % Calculates accuracy of Frequency and ROCOF under Interharmic tests
       calcDynMeasRange(obj) % Calculates the accuracy during frequency modulation over the measuring range
       calcFreqSettlingTime(obj) % Calculate the settling time of the frequency step using equivalent time sampling
