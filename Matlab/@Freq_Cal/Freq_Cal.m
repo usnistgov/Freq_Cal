@@ -132,6 +132,8 @@ classdef Freq_Cal < handle
       calcDynMeasRange(obj) % Calculates the accuracy during frequency modulation over the measuring range
       calcFreqSettlingTime(obj) % Calculate the settling time of the frequency step using equivalent time sampling
       calcRocofSettlingTime(obj) % Calculate the settling time of the ROCOF step using equivalent time sampling
+      calcStep(obj) % Calculate results of the step tests using equivalent time sampling
+      calcCombinedStep(obj) % Calculate results of the combined step tests using equivalent time sampling 
   end
 %%-------------------------------------------------------------------------
   % Private Methods called from external method files

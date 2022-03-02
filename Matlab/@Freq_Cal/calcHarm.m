@@ -68,7 +68,9 @@ function obj = calcHarm(obj)
                 ylabel('Frequency Error (Hz)')
                 xlabel('Time (s)')
                 yline(obj.MaxAbsFreqError,'--r')
-                ylim([0,1.1*obj.MaxAbsFreqError])
+                ylim([-0.001,1.1*obj.MaxAbsFreqError])
+                xlim([0,5])
+                set(gca,'FontSize',12)
                 
                 set(0, 'currentfigure', fRFe)
                 subplot(3,1,i)
@@ -77,7 +79,9 @@ function obj = calcHarm(obj)
                 xlabel('ROCOF Error (Hz/s)')
                 ylabel('Time (s)')
                 yline(obj.MaxAbsRocofError,'--r')
-                ylim([0,1.1*obj.MaxAbsRocofError])
+                ylim([-0.001,1.1*obj.MaxAbsRocofError])
+                xlim([0,5])
+                set(gca,'FontSize',12)
 
                 
             end
