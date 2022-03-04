@@ -9,5 +9,5 @@
 %FC.calcInterHarm
 %FC.calcHarm
 %FC.calcDynMeasRange
-%FC.calcStep;
-FC.calcCombinedStep
+FC.calcStep;
+%FC.calcCombinedStep

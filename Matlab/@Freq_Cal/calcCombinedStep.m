@@ -57,8 +57,10 @@ shift = max(maxLags)-maxLags;  % these should show how far each column needs to 
 nData = nData-max(shift);
 fData = zeros(nData,numel(obj.dataFiles(1)));
 rfData = fData;
-feCol = find(hdr=='PMU_FREQ');
-rfeCol = find(hdr=='PMU_ROCOF');
+feCol = find(hdr=='FE');
+rfeCol = find(hdr=='RFE');
+%feCol = find(hdr=='PMU_FREQ');
+%rfeCol = find(hdr=='PMU_ROCOF');
 for i = 1:numel(obj.dataFiles)
     C = readcell(cell2mat(obj.dataFiles(i)));    
     fData(:,i) = cell2mat(C(2+shift(i):nData+shift(i)+1,feCol));
