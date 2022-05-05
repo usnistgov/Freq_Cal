@@ -70,18 +70,18 @@ function obj = calcHarm(obj)
                 yline(obj.MaxAbsFreqError,'--r')
                 ylim([-0.001,1.1*obj.MaxAbsFreqError])
                 xlim([0,5])
-                set(gca,'FontSize',12)
+                set(gca,'FontSize',16)
                 
                 set(0, 'currentfigure', fRFe)
                 subplot(3,1,i)
                 plot(t,RFe,'*k')
                 title(sprintf('ROCOF Error, F = %d, H. Phase = %d',f,p))
-                xlabel('ROCOF Error (Hz/s)')
-                ylabel('Time (s)')
+                ylabel('ROCOF Error (Hz/s)')
+                xlabel('Time (s)')
                 yline(obj.MaxAbsRocofError,'--r')
                 ylim([-0.001,1.1*obj.MaxAbsRocofError])
                 xlim([0,5])
-                set(gca,'FontSize',12)
+                set(gca,'FontSize',16)
 
                 
             end

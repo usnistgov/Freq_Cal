@@ -68,7 +68,7 @@ end
 % Plot the frequency
 [t,Fe] = obj.interleaveData(fData,1/obj.Fs,'pos');   % interleave the ETS data
 figure(obj.fig); obj.fig=obj.fig+1;
-tSettle=settlingTimePlot(t,Fe,1);
+tSettle=settlingTimePlot(t,Fe,obj.MaxAbsFreqError);
 ylabel('Frequency error (Hz)')
 title(sprintf('Step Frequency Response, Step Response Times = %0.4f s, %0.4f s,',tSettle(1), tSettle(2)))
 set(gca,'FontSize',12)
@@ -76,7 +76,7 @@ set(gca,'FontSize',12)
 % Plot the ROCOF
 [t,RFe] = obj.interleaveData(rfData,1/obj.Fs,'pos');   % interleave the ETS data
 figure(obj.fig); obj.fig=obj.fig+1;
-tSettle=settlingTimePlot(t,RFe,4);
+tSettle=settlingTimePlot(t,RFe,obj.MaxAbsRocofError);
 ylabel('ROCOF error (Hz/s)')
 title(sprintf(' Step ROCOF Response, Step Response Times = %0.4f s, %0.4f s,',tSettle(1),tSettle(2)))
 set(gca,'FontSize',12)
@@ -84,7 +84,7 @@ set(gca,'FontSize',12)
 end
 
 
-function tSettle = settlingTimePlot(T,Y,effRes)
+function tSettle = settlingTimePlot(T,Y,maxAbsErr)
 
 % the plots step, then step back.  Divide each into two plots and determine the two step respose times
 y = [Y(1:floor(length(Y)/2)),Y(floor(length(Y)/2)+1:end)];
@@ -101,32 +101,26 @@ for i = 1:2
     %idxT0 = find(absYoffset>effRes,1,'first')-1; % use the effective resolution to determine when the step response begins
     
     % determine a threshold for the step response beginning and end
-    thresh = (edges(idx+1)-edges(idx))*effRes;
-    idxT0 = find(absYoffset>thresh,1,'first')-1;
-    idxSettle = find(absYoffset>thresh,1,'last');
+    idxT0 = find(absYoffset>maxAbsErr,1,'first')-1;
+    idxSettle = find(absYoffset>maxAbsErr,1,'last');
     
-    %     % sometimes effRes is not enough so we will multiply it until it is
-%     idxSettle = [];
-%     thresh = effRes;
-%     while (isempty(idxSettle))
-%         idxSettle = find(absYoffset>thresh,1,'last');
-%         thresh = thresh+effRes;
-%     end
-    
-    
-    t0(i) = tVec(idxT0);
-    tSettle(i) = tVec(idxSettle);
+    %If the level is not found, that means the response time is "n/a"    
+    if ((~isempty(idxT0))||(~isempty(idxSettle)))
+        t0(i) = tVec(idxT0);
+        tSettle(i) = tVec(idxSettle);
+    end
 end
 
 plot(T,Y,'k')
-xline(t0(1),'--r');xline(t0(2),'--r');
-xline(tSettle(1),'--r');xline(tSettle(2),'--r');
+if ((t0(1)> 0)&&(tSettle(1)>0)),xline(t0(1),'--r'),xline(tSettle(1),'--r'), end
+if ((t0(2)> 0)&&(tSettle(2)>0)),xline(t0(2),'--r'),xline(tSettle(2),'--r'), end
+
 xlabel('Time(s)')
 
 %plot limits
 lowLim = t0(1)-0.2; if lowLim<0,lowLim=0;end
 hiLim = tSettle(2)+0.2; if hiLim>T(end),hiLim=T(end);end    
-xlim([lowLim,hiLim])
+if (lowLim>0)&&(hiLim>0.2),xlim([lowLim,hiLim]),end
 
 tSettle = tSettle-t0;
 

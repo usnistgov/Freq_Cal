@@ -18,6 +18,10 @@ classdef Freq_Cal < handle
         FreqEffRes
         RocofEffRes
         
+        % Settling Times will be calculated
+        FreqSettle
+        RocofSettle
+        
         % OpRng and MeasRng are 2 value arrays of doubles:  [lower, upper]
         OpRng
         MeasRng
@@ -26,8 +30,7 @@ classdef Freq_Cal < handle
         MaxAbsRocofError        
         
         MaxAbsFreqErrorDyn
-        MaxAbsRocofErrorDyn
-        R
+        MaxAbsRocofErrorDyn        
        
         fig = 1;    % keep track of open figures
         
@@ -74,12 +77,16 @@ classdef Freq_Cal < handle
             defaultFs = 50;
             defaultOpRng = [25,75];
             defaultMeasRng = [45,55];
+            defaultFreqDelay = 0.0895;
+            defaultRocofDelay = 0.0861;
             defaultMaxAbsFreqError = 0.005;
             defaultMaxAbsRocofErr = 0.04;
             defaultMaxAbsFreqErrorDyn = 0.35;
             defaultMaxAbsRocofErrDyn = 14;
             defaultFreqEffRes = 0.0005;
             defaultRocofEffRes = 0.006;
+            defaultFreqSettle = 0.1580;
+            defaultRocofSettle = 0.0880;
             
             p = inputParser;
             
@@ -90,12 +97,16 @@ classdef Freq_Cal < handle
              addParameter(p,'Fs',defaultF0,validScalarPosNum)
              addParameter(p,'OpRng',defaultOpRng,validRng)
              addParameter(p,'MeasRng',defaultMeasRng,validRng)
+             addParameter(p,'FreqDelay',defaultFreqDelay,validScalarPosNum)
+             addParameter(p,'RocofDelay',defaultRocofDelay,validScalarPosNum)
              addParameter(p,'MaxAbsFreqError',defaultMaxAbsFreqError,validScalarPosNum)
              addParameter(p,'MaxAbsRocofError',defaultMaxAbsRocofErr,validScalarPosNum)
              addParameter(p,'MaxAbsFreqErrorDyn',defaultMaxAbsFreqErrorDyn,validScalarPosNum)
              addParameter(p,'MaxAbsRocofErrorDyn',defaultMaxAbsRocofErrDyn,validScalarPosNum)
              addParameter(p,'FreqEffRes',defaultFreqEffRes,validScalarPosNum)
-             addParameter(p,'RocofEffRes',defaultRocofEffRes,validScalarPosNum)
+             addParameter(p,'RocofEffRes',defaultRocofEffRes,validScalarPosNum)             
+             addParameter(p,'FreqSettle',defaultFreqSettle,validScalarPosNum)
+             addParameter(p,'RocofSettle',defaultRocofSettle,validScalarPosNum)
              
              
              parse(p,varargin{:})
@@ -104,12 +115,17 @@ classdef Freq_Cal < handle
              obj.Fs = p.Results.Fs;
              obj.OpRng = p.Results.OpRng;
              obj.MeasRng = p.Results.MeasRng;
+             obj.FreqDelay = p.Results.FreqDelay;
+             obj.ROCOFDelay = p.Results.RocofDelay;
              obj.MaxAbsFreqError = p.Results.MaxAbsFreqError;
              obj.MaxAbsRocofError = p.Results.MaxAbsRocofError;           
              obj.MaxAbsFreqErrorDyn = p.Results.MaxAbsFreqErrorDyn;
              obj.MaxAbsRocofErrorDyn = p.Results.MaxAbsRocofErrorDyn;   
              obj.FreqEffRes = p.Results.FreqEffRes;
              obj.RocofEffRes = p.Results.RocofEffRes;
+             obj.FreqSettle = p.Results.FreqSettle;
+             obj.RocofSettle = p.Results.RocofSettle;
+             
 
             if (obj.F0 ~= defaultF0 && obj.Fs ~= defaultFs)
                 structure = struct('ResultsPath',struct('ResultsPath',obj.resultPath),....
@@ -134,6 +150,10 @@ classdef Freq_Cal < handle
       calcRocofSettlingTime(obj) % Calculate the settling time of the ROCOF step using equivalent time sampling
       calcStep(obj) % Calculate results of the step tests using equivalent time sampling
       calcCombinedStep(obj) % Calculate results of the combined step tests using equivalent time sampling 
+      calcDropAndRecover(obj) % results from the voltage drop and recover test
+      calcNoise(obj) % results from the noise test
+      calcUnbalancedMagnitude(obj)
+      calcRamp(obj)
   end
 %%-------------------------------------------------------------------------
   % Private Methods called from external method files

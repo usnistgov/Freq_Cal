@@ -7,7 +7,10 @@
 %FC.calcRocofSettlingTime; % use this for the negative step
 %FC.calcFreqRng
 %FC.calcInterHarm
-%FC.calcHarm
+FC.calcHarm
 %FC.calcDynMeasRange
-FC.calcStep;
-%FC.calcCombinedStep
+%FC.calcStep;
+%FC.calcDropAndRecover;
+%FC.calcNoise;
+%FC.calcUnbalancedMagnitude;
+%FC.calcRamp;
